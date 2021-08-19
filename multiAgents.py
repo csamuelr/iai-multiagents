@@ -42,6 +42,9 @@ class ReflexAgent(Agent):
 		some Directions.X for some X in the set {North, South, West, East, Stop}
 		"""
 		# Collect legal moves and successor states
+
+		random.seed(random.randint(1,5))
+
 		legalMoves = gameState.getLegalActions()
 
 		# Choose one of the best actions
@@ -81,7 +84,7 @@ class ReflexAgent(Agent):
 		global PACMAN_PREV_POS
 
 		# print('successorGameState: {}'.format(successorGameState))
-		print('newPos: {}'.format(newPos))
+		# print('newPos: {}'.format(newPos))
 		# print('newFood: {}'.format(newFood))
 		# print('newGhostStates: {}'.format(newGhostStates[0].getPosition()))
 		# print('newScaredTimes: {}'.format(newScaredTimes[0]))
@@ -90,7 +93,7 @@ class ReflexAgent(Agent):
 		
 		# print('Action: {}'.format(action))
 		
-		print("HasFood: {}".format(successorGameState.hasFood(newPos[0], newPos[1])))
+		# print("HasFood: {}".format(successorGameState.hasFood(newPos[0], newPos[1])))
 
 		reward = 1.0
 		demage = 1.0
@@ -113,23 +116,23 @@ class ReflexAgent(Agent):
 		else:
 			capsulesDistances.append(1)
 
-		print('new capsules: {}'.format(capsulesDistances))
+		# print('new capsules: {}'.format(capsulesDistances))
 
 		closestF = min(foodDistances)
 		closestC = min(capsulesDistances)
 		closestG = min(ghostsDistances)
 		
-		# if len(newScaredTimes):
-		# 	pass
+		if len(newScaredTimes):
+			pass
 
-		# if newPos in newCapsulesPositions:
-		# 	reward += 50
+		if newPos in newCapsulesPositions:
+			reward += 50
 
-		# if newPos in ghostsPositions:
-		# 	demage -= 20
+		if newPos in ghostsPositions:
+			demage -= 20
 		
-		# if not successorGameState.hasFood(newPos[0], newPos[1]):
-		# 	demage -= 15
+		if not successorGameState.hasFood(newPos[0], newPos[1]):
+			demage -= 15
 
 		if action == 'Stop':
 			demage -= 50
@@ -137,17 +140,17 @@ class ReflexAgent(Agent):
 		if len(foodDistances) == 0:
 			return 0
 
-		# if PACMAN_PREV_POS is not None:
-		# 	print("MD: {}".format( manhattanDistance(currentGameState.getPacmanPosition(), PACMAN_PREV_POS) ))
-		# 	d = manhattanDistance(currentGameState.getPacmanPosition(), PACMAN_PREV_POS)
-		# 	if d > 0:
-		# 		demage -= 10
+		if PACMAN_PREV_POS is not None:
+			# print("MD: {}".format( manhattanDistance(currentGameState.getPacmanPosition(), PACMAN_PREV_POS) ))
+			d = manhattanDistance(currentGameState.getPacmanPosition(), PACMAN_PREV_POS)
+			if d > 0:
+				demage -= 10
 
 
-		# 	PACMAN_PREV_POS = currentGameState.getPacmanPosition()
+			PACMAN_PREV_POS = currentGameState.getPacmanPosition()
 
-		# else:
-		# 	PACMAN_PREV_POS = currentGameState.getPacmanPosition()
+		else:
+			PACMAN_PREV_POS = currentGameState.getPacmanPosition()
 
 
 		# print("Capsules: {}".format(successorGameState.getCapsules()))
@@ -166,10 +169,10 @@ class ReflexAgent(Agent):
 			>>> This evaluation fuction isn't working as expected
 		'''
 
-		print('reward: {}'.format(reward))
-		print('demage: {}'.format(demage))
+		# print('reward: {}'.format(reward))
+		# print('demage: {}'.format(demage))
 
-		return  successorGameState.getScore() + closestG / (closestF * 10) # + reward + demage
+		return  successorGameState.getScore() + closestG / (closestF * 10) + (1/reward) #+ (1/demage)
 
 
 def scoreEvaluationFunction(currentGameState):
@@ -248,7 +251,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 		Returns the max utility value-action for max-agent
 		"""
 		legalMoves = gameState.getLegalActions(index)
-		maxValue = float("-inf")
+		maxValue = float("-Inf")
 		maxAction = ""
 
 		for action in legalMoves:
@@ -307,12 +310,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 		
 		# Format of result = [action, score]
 		# Initial state: index = 0, depth = 0, alpha = -infinity, beta = +infinity
-		result = self.getBestActionAndScore(gameState, 0, 0, float("-inf"), float("inf"))
+		result = self.getBestActionAndScore(gameState, 0, 0, float("-Inf"), float("Inf"))
 
 		# Return the action from result
 		return result[0]
 
-	def getBestActionAndScore(self, game_state, index, depth, alpha, beta):
+	def getBestActionAndScore(self, state, index, depth, alpha, beta):
 		"""
 		Returns value as pair of [action, score] based on the different cases:
 		1. Terminal state
@@ -320,32 +323,32 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 		3. Min-agent
 		"""
 		# Terminal states:
-		if len(game_state.getLegalActions(index)) == 0 or depth == self.depth:
-			return "", game_state.getScore()
+		if len(state.getLegalActions(index)) == 0 or depth == self.depth:
+			return "", state.getScore()
 
 		# Max-agent: Pacman has index = 0
 		if index == 0:
-			return self.maxValue(game_state, index, depth, alpha, beta)
+			return self.maxValue(state, index, depth, alpha, beta)
 
 		# Min-agent: Ghost has index > 0
 		else:
-			return self.minValue(game_state, index, depth, alpha, beta)
+			return self.minValue(state, index, depth, alpha, beta)
 
-	def maxValue(self, game_state, index, depth, alpha, beta):
+	def maxValue(self, state, index, depth, alpha, beta):
 		"""
 		Returns the max utility action-score for max-agent with alpha-beta pruning
 		"""
-		legalMoves = game_state.getLegalActions(index)
+		legalMoves = state.getLegalActions(index)
 		maxValue = float("-inf")
 		maxAction = ""
 
 		for action in legalMoves:
-			successor = game_state.generateSuccessor(index, action)
+			successor = state.generateSuccessor(index, action)
 			sucessorIndex = index + 1
 			successorDepth = depth
 
 			# Update the successor agent's index and depth if it's pacman
-			if sucessorIndex == game_state.getNumAgents():
+			if sucessorIndex == state.getNumAgents():
 				sucessorIndex = 0
 				successorDepth += 1
 
@@ -368,21 +371,21 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 		return maxAction, maxValue
 
-	def minValue(self, game_state, index, depth, alpha, beta):
+	def minValue(self, state, index, depth, alpha, beta):
 		"""
 		Returns the min utility action-score for min-agent with alpha-beta pruning
 		"""
-		legalMoves = game_state.getLegalActions(index)
-		minValue = float("inf")
+		legalMoves = state.getLegalActions(index)
+		minValue = float("Inf")
 		minAction = ""
 
 		for action in legalMoves:
-			successor = game_state.generateSuccessor(index, action)
+			successor = state.generateSuccessor(index, action)
 			sucessorIndex = index + 1
 			successorDepth = depth
 
 			# Update the successor agent's index and depth if it's pacman
-			if sucessorIndex == game_state.getNumAgents():
+			if sucessorIndex == state.getNumAgents():
 				sucessorIndex = 0
 				successorDepth += 1
 
@@ -418,7 +421,83 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 		  legal moves.
 		"""
 		"*** YOUR CODE HERE ***"
-		# util.raiseNotDefined()
+		action, score = self.getValue(gameState, 0, 0)
+
+		return action
+
+	def getValue(self, state, index, depth):
+		"""
+		Returns value as pair of [action, score] based on the different cases:
+		1. Terminal state
+		2. Max-agent
+		3. Expectation-agent
+		"""
+		# Terminal states:
+		if len(state.getLegalActions(index)) == 0 or depth == self.depth:
+			return "", self.evaluationFunction(state)
+
+		# Max-agent: Pacman has index = 0
+		if index == 0:
+			return self.maxValue(state, index, depth)
+
+		# Expectation-agent: Ghost has index > 0
+		else:
+			return self.expectedValue(state, index, depth)
+
+	def maxValue(self, state, index, depth):
+		"""
+		Returns the max utility value-action for max-agent
+		"""
+		legalMoves = state.getLegalActions(index)
+		maxValue = float('Inf')
+		maxAction = ''
+
+		for action in legalMoves:
+			successor = state.generateSuccessor(index, action)
+			successorIndex = index + 1
+			successorDepth = depth
+
+			# Update the successor agent's index and depth if it's pacman
+			if successorIndex == state.getNumAgents():
+				successorIndex = 0
+				successorDepth += 1
+
+			currentAction, currentValue = self.getValue(successor, successorIndex, successorDepth)
+
+			if currentValue > maxValue:
+				maxValue = currentValue
+				maxAction = action
+
+		return maxAction, maxValue
+
+	def expectedValue(self, state, index, depth):
+		"""
+		Returns the max utility value-action for max-agent
+		"""
+		legalMoves = state.getLegalActions(index)
+		expectedValue = 0
+		expectedAction = ''
+
+		# Find the current successor's probability using a uniform distribution
+		successorProbability = 1.0 / len(legalMoves)
+
+		for action in legalMoves:
+			successor = state.generateSuccessor(index, action)
+			successorIndex = index + 1
+			successorDepth = depth
+
+			# Update the successor agent's index and depth if it's pacman
+			if successorIndex == state.getNumAgents():
+				successorIndex = 0
+				successorDepth += 1
+
+			# Calculate the action-score for the current successor
+			currentAction, currentValue = self.getValue(successor, successorIndex, successorDepth)
+
+			# Update expectedValue with the currentValue and successorProbability
+			expectedValue += successorProbability * currentValue
+
+		return expectedAction, expectedValue
 		
 
 def betterEvaluationFunction(currentGameState):
@@ -429,8 +508,8 @@ def betterEvaluationFunction(currentGameState):
 	  DESCRIPTION: <write something here so we know what you did>
 	"""
 	"*** YOUR CODE HERE ***"
-	util.raiseNotDefined()
-
+	# util.raiseNotDefined()
+	
 # Abbreviation
 better = betterEvaluationFunction
 
