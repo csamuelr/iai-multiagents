@@ -19,8 +19,6 @@ import random, util
 from game import Agent
 from time import sleep
 
-PACMAN_PREV_POS = None
-
 class ReflexAgent(Agent):
 	"""
 	  A reflex agent chooses an action at each choice point by examining
@@ -43,7 +41,7 @@ class ReflexAgent(Agent):
 		"""
 		# Collect legal moves and successor states
 
-		random.seed(random.randint(1,5))
+		# random.seed(random.randint(1,5))
 
 		legalMoves = gameState.getLegalActions()
 
@@ -81,7 +79,6 @@ class ReflexAgent(Agent):
 		newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 	
 		"*** YOUR CODE HERE ***"
-		global PACMAN_PREV_POS
 
 		# print('successorGameState: {}'.format(successorGameState))
 		# print('newPos: {}'.format(newPos))
@@ -116,6 +113,7 @@ class ReflexAgent(Agent):
 		else:
 			capsulesDistances.append(1)
 
+
 		# print('new capsules: {}'.format(capsulesDistances))
 
 		closestF = min(foodDistances)
@@ -129,28 +127,16 @@ class ReflexAgent(Agent):
 			reward += 50
 
 		if newPos in ghostsPositions:
-			demage -= 20
+			demage -= 10
 		
 		if not successorGameState.hasFood(newPos[0], newPos[1]):
-			demage -= 15
+			demage -= 10
 
 		if action == 'Stop':
 			demage -= 50
 		
 		if len(foodDistances) == 0:
 			return 0
-
-		if PACMAN_PREV_POS is not None:
-			# print("MD: {}".format( manhattanDistance(currentGameState.getPacmanPosition(), PACMAN_PREV_POS) ))
-			d = manhattanDistance(currentGameState.getPacmanPosition(), PACMAN_PREV_POS)
-			if d > 0:
-				demage -= 10
-
-
-			PACMAN_PREV_POS = currentGameState.getPacmanPosition()
-
-		else:
-			PACMAN_PREV_POS = currentGameState.getPacmanPosition()
 
 
 		# print("Capsules: {}".format(successorGameState.getCapsules()))
@@ -172,7 +158,7 @@ class ReflexAgent(Agent):
 		# print('reward: {}'.format(reward))
 		# print('demage: {}'.format(demage))
 
-		return  successorGameState.getScore() + closestG / (closestF * 10) + (1/reward) #+ (1/demage)
+		return  successorGameState.getScore() + closestG / (closestF * 10) + closestC / (closestF * 100) + closestF / (closestC * 100) 
 
 
 def scoreEvaluationFunction(currentGameState):
@@ -204,11 +190,14 @@ class MultiAgentSearchAgent(Agent):
 		self.index = 0 # Pacman is always agent index 0
 		self.evaluationFunction = util.lookup(evalFn, globals())
 		self.depth = int(depth)
-
+ 
 class MinimaxAgent(MultiAgentSearchAgent):
 	"""
 	  Your minimax agent (question 2)
 	"""
+
+	# def __init__(self):
+	# 	MultiAgentSearchAgent.__init__(self, evalFn = 'scoreEvaluationFunction', depth = '2')
 
 	def getAction(self, gameState):
 		"""
@@ -238,7 +227,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 	def getValue(self, gameState, index, depth):
 		
 		if len(gameState.getLegalActions(index)) == 0 or depth == self.depth:
-			return gameState.getScore(), ""
+			return gameState.getScore(), None
 
 		if index == 0:
 			return self.maxValue(gameState, index, depth)
@@ -251,7 +240,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 		Returns the max utility value-action for max-agent
 		"""
 		legalMoves = gameState.getLegalActions(index)
-		maxValue = float("-Inf")
+		maxValue = float("-inf")
 		maxAction = ""
 
 		for action in legalMoves:
@@ -310,7 +299,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 		
 		# Format of result = [action, score]
 		# Initial state: index = 0, depth = 0, alpha = -infinity, beta = +infinity
-		result = self.getBestActionAndScore(gameState, 0, 0, float("-Inf"), float("Inf"))
+		result = self.getBestActionAndScore(gameState, 0, 0, float("-inf"), float("inf"))
 
 		# Return the action from result
 		return result[0]
@@ -376,7 +365,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 		Returns the min utility action-score for min-agent with alpha-beta pruning
 		"""
 		legalMoves = state.getLegalActions(index)
-		minValue = float("Inf")
+		minValue = float("inf")
 		minAction = ""
 
 		for action in legalMoves:
@@ -413,7 +402,10 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 	  Your expectimax agent (question 4)
 	"""
 
-	def getAction(self, gameState):
+	# def __init__(self):
+	# 	MultiAgentSearchAgent.__init__(self, evalFn = 'scoreEvaluationFunction', depth = '2')
+
+	def getAction(self, state):
 		"""
 		  Returns the expectimax action using self.depth and self.evaluationFunction
 
@@ -421,7 +413,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 		  legal moves.
 		"""
 		"*** YOUR CODE HERE ***"
-		action, score = self.getValue(gameState, 0, 0)
+		action, score = self.getValue(state, 0, 0)
 
 		return action
 
@@ -433,8 +425,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 		3. Expectation-agent
 		"""
 		# Terminal states:
-		if len(state.getLegalActions(index)) == 0 or depth == self.depth:
-			return "", self.evaluationFunction(state)
+		if state.isLose() or state.isWin() or depth == self.depth:
+			return None, self.evaluationFunction(state)
 
 		# Max-agent: Pacman has index = 0
 		if index == 0:
@@ -449,7 +441,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 		Returns the max utility value-action for max-agent
 		"""
 		legalMoves = state.getLegalActions(index)
-		maxValue = float('Inf')
+		maxValue = float("-inf")
 		maxAction = ''
 
 		for action in legalMoves:
@@ -464,7 +456,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
 			currentAction, currentValue = self.getValue(successor, successorIndex, successorDepth)
 
-			if currentValue > maxValue:
+			if maxValue is None or currentValue > maxValue:
 				maxValue = currentValue
 				maxAction = action
 
@@ -474,14 +466,15 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 		"""
 		Returns the max utility value-action for max-agent
 		"""
-		legalMoves = state.getLegalActions(index)
+		ghostMoves = state.getLegalActions(index)
 		expectedValue = 0
-		expectedAction = ''
+		expectedAction = None
 
 		# Find the current successor's probability using a uniform distribution
-		successorProbability = 1.0 / len(legalMoves)
+		if len(ghostMoves) != 0:
+			successorProbability = float(1.0 / len(ghostMoves))
 
-		for action in legalMoves:
+		for action in ghostMoves:
 			successor = state.generateSuccessor(index, action)
 			successorIndex = index + 1
 			successorDepth = depth
@@ -495,7 +488,15 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 			currentAction, currentValue = self.getValue(successor, successorIndex, successorDepth)
 
 			# Update expectedValue with the currentValue and successorProbability
-			expectedValue += successorProbability * currentValue
+			if expectedValue is None:
+				expectedValue = 0.0
+
+			score = successorProbability * currentValue
+			expectedValue += score
+			expectedAction = action
+
+		if expectedValue is None:
+			return None, self.evaluationFunction(state)
 
 		return expectedAction, expectedValue
 		
@@ -508,8 +509,63 @@ def betterEvaluationFunction(currentGameState):
 	  DESCRIPTION: <write something here so we know what you did>
 	"""
 	"*** YOUR CODE HERE ***"
-	# util.raiseNotDefined()
+	util.raiseNotDefined()
 	
 # Abbreviation
 better = betterEvaluationFunction
 
+
+################################################
+#				comunication				   #
+################################################
+
+
+class AgentsComunication(MinimaxAgent):
+
+	def __init__(self):
+		MinimaxAgent.__init__(self)
+		self.agent = None
+		self.con = Connection()
+
+	def send(self):
+		pass
+
+	def request(self, agent, state):
+		pass
+
+	def message(self):
+		pass
+
+	def __repr__(self):
+		return "Agent Comunication Object"
+
+	def getAction(self, state):
+
+		result = self.getValue(state, 0, 0)
+		return result[1]
+
+	def getValue(self, state, index, depth):
+		
+		if len(state.getLegalActions(index)) == 0 or depth == self.depth:
+			return state.getScore(), None
+
+		if index == 0:
+			return self.maxValue(state, index, depth)
+
+		else:
+			pos = self.con.ask_position(index, state)
+			if pos == state.getGhostPosition(index):
+				return state.getScore(), None
+			return self.minValue(state, index, depth)
+
+
+class Connection:
+
+	def __init__(self):
+		pass
+
+	def ask_position(self, agent, state):
+		pos = state.getGhostPosition(agent)			
+		print("Asking to Ghost {} his position...\nHis response: my position is {}.".format(agent, pos))
+
+		return pos
